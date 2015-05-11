@@ -3,12 +3,12 @@ require 'benchmark'
 require File.join(File.expand_path(__dir__), '../app/config_parser')
 
 describe ConfigParser do
-  xit 'saves groups' do
+  it 'saves groups' do
     parser = ConfigParser.new
 
-    config = parser.parse(config_file)
+    parser.parse(config_file)
 
-    expect(config.groups).to match_array %w(common ftp http)
+    expect(parser.groups).to match_array %w(common ftp http)
   end
 
   it 'defines config groups as methods' do
@@ -24,12 +24,12 @@ describe ConfigParser do
 
     config = parser.parse(config_file, [:production, 'ubuntu'])
 
-    expect(config.ftp[:path]).to eq '/srv/var/tmp/'
-
-    config = parser.parse(config_file, ['ubuntu'])
-
-    expect(config.prioritized_environments).not_to include 'production'
     expect(config.ftp[:path]).to eq '/etc/var/uploads'
+
+    config = parser.parse(config_file, ['production'])
+
+    # expect(config.environments).not_to include 'ubuntu'
+    expect(config.ftp[:path]).to eq '/srv/var/tmp/'
   end
 
   describe 'assignment' do
@@ -98,52 +98,29 @@ describe ConfigParser do
     it 'are overwritten when file is loaded' do
       parser = ConfigParser.new
 
-      config = parser.parse(config_file, ['ubuntu', :production])
+      parser.parse(config_file, ['ubuntu', :production])
 
-      expect(config.prioritized_environments).to eq %w(ubuntu production __default__)
+      expect(parser.environments).to eq %w(ubuntu production __default__)
 
-      config = parser.parse(config_file, ['macos', :dev, :new])
+      parser.parse(config_file, ['macos', :dev, :new])
 
-      expect(config.prioritized_environments).to eq %w(macos dev new  __default__)
+      expect(parser.environments).to eq %w(macos dev new  __default__)
     end
   end
 
   describe '#override?' do
-    it 'overrides for production only because there is no option for other' do
+    it 'overrides values for given environments' do
       parser = ConfigParser.new
-      config = parser.parse(config_file, ['ubuntu', :production])
+      parser.parse(config_file, ['ubuntu', :production])
 
-      expect(config.override?(:http, :path, :production)).to be_truthy
-      expect(config.override?(:http, :path, :ubuntu)).to be_falsey
-      expect(config.override?(:http, :path, :weird_stuff)).to be_falsey
-      expect(config.override?(:http, :path, :staging)).to be_falsey
-    end
-
-    it 'overrides for ubuntu as it is the last in the list' do
-      parser = ConfigParser.new
-      config = parser.parse(config_file, [:production, 'ubuntu'])
-
-      expect(config.override?(:ftp, :path, :ubuntu)).to be_truthy
-      expect(config.override?(:ftp, :path, :production)).to be_truthy
+      expect(parser.override?(:production)).to be_truthy
+      expect(parser.override?(:ubuntu)).to be_truthy
+      expect(parser.override?(:staging)).to be_falsey
+      expect(parser.override?(:non_existing)).to be_falsey
     end
   end
 
-  describe '#prioritized_environments=' do
-    it 'overrides values when config environment has changed' do
-      crashlytics = ConfigParser.new
-      param_per_environment = {http: {on: {'ubuntu' => 1, 'production' => 0}}}
-      config = {http: {on: 0}}
-      expected_config = {http: {on: 1}}
-      crashlytics.instance_variable_set(:@param_per_environment, param_per_environment)
-      crashlytics.instance_variable_set(:@config, config)
-
-      crashlytics.environments = :ubuntu
-
-      expect(crashlytics.config).to eq expected_config
-    end
-  end
-
-  describe '#parsed_param' do
+  describe '#parse_param' do
     it 'extracts the environment' do
       parser = ConfigParser.new
       parsed_param = %w(cool env mirimasu)
@@ -156,6 +133,15 @@ describe ConfigParser do
       parsed_param = %w(cool __default__ mirimasu)
 
       expect(parser.parse_param('cool = mirimasu')).to match_array parsed_param
+    end
+  end
+
+  describe 'design consideration' do
+    it 'returns nil for non existing parameter' do
+      parser = ConfigParser.new
+      config = parser.parse(config_file, ['ubuntu', :production])
+
+      expect(config.non_existing).to eq nil
     end
   end
 end

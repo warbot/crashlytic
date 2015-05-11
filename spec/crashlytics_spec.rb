@@ -38,13 +38,6 @@ describe Crashlytics do
       expect(crashlytics.file).to eq(real_file)
     end
 
-    it 'returns an instance of config parser' do
-      crashlytics = Crashlytics.new
-      config = crashlytics.load_config(crashlytics.path_to_file)
-
-      expect(config).to be_an_instance_of(crashlytics.config_parser)
-    end
-
     it 'returns same config unless file changed' do
       crashlytics = Crashlytics.new
       config_parser = crashlytics.config_parser

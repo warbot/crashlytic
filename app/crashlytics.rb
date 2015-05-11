@@ -1,4 +1,4 @@
-load File.join(File.expand_path(__dir__), 'config_parser.rb')
+require File.join(File.expand_path(__dir__), 'config_parser.rb')
 
 class Crashlytics
   attr_reader :new_file, :file, :config_parser, :config
