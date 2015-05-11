@@ -30,9 +30,7 @@ class ConfigParser
 
   def parse(config, environments = [])
     self.environments = environments
-    before_parse
     parse_config(config)
-    after_parse
 
     @config
   end
@@ -113,19 +111,5 @@ class ConfigParser
 
   def environment_present?(environment)
     @environments.include?(environment.to_s)
-  end
-
-  def before_parse
-  end
-
-  def after_parse
-    define_group_methods
-  end
-
-  def define_group_methods
-    groups.each do |group|
-      return if respond_to?(group.to_sym)
-      define_singleton_method(group) { @config[group] }
-    end
   end
 end
