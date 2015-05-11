@@ -17,7 +17,7 @@ class Crashlytics
 
   def load_config(file_path, overrides = [])
     load_config_file(file_path)
-    parse_config_or_change_config_environments(overrides)
+    parse_config_or_get_cached_config(overrides)
     mark_file_old
 
     @config
@@ -29,7 +29,7 @@ class Crashlytics
 
   private
 
-  def parse_config_or_change_config_environments(overrides)
+  def parse_config_or_get_cached_config(overrides)
     if new_file
       @config = config_parser.parse(file, overrides)
     else
