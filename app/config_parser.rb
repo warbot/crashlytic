@@ -3,7 +3,7 @@ require 'ostruct'
 require File.join(File.expand_path(__dir__), 'value_parser.rb')
 
 class ConfigParser
-  attr_reader :groups, :config, :prioritized_environments,
+  attr_reader :config, :prioritized_environments,
               :param_per_environment
   DEFAULT_ENV = '__default__'
 
@@ -13,10 +13,6 @@ class ConfigParser
     @param_per_environment = HashWithIndifferentAccess.new
     @prioritized_environments = [DEFAULT_ENV]
     @value_parser = ValueParser.new
-  end
-
-  def path_to_file
-    File.join(File.expand_path(__dir__), '../config/settings.conf')
   end
 
   def params_regex
@@ -35,9 +31,11 @@ class ConfigParser
     /;.*/
   end
 
-  def load_config(config, overrides = [])
-    self.environments = overrides
-    parse_config_with_hooks(config)
+  def parse(config, environments = [])
+    self.environments = environments
+    before_parse
+    parse_config(config)
+    after_parse
 
     self
   end
@@ -55,18 +53,13 @@ class ConfigParser
   end
 
   def prioritized_environments=(overrides)
-    @prioritized_environments = [DEFAULT_ENV] + Array(overrides).map(&:to_s).reverse
+    @prioritized_environments = Array(overrides).map(&:to_s) + [DEFAULT_ENV]
     override_values
   end
+
   alias :environments= :prioritized_environments=
 
   private
-
-  def parse_config_with_hooks(config)
-    before_parse
-    parse_config(config)
-    after_parse
-  end
 
   def parse_config(config)
     config.each_line do |line|
@@ -119,24 +112,23 @@ class ConfigParser
     @param_per_environment[group] ||= HashWithIndifferentAccess.new
     @param_per_environment[group][param] ||= HashWithIndifferentAccess.new
     @param_per_environment[group][param][environment] = @value_parser.parse(value)
-    set_param_value_per_environment(group, param, @param_per_environment)
+    set_param_value_per_environment(group, param)
   end
 
-  def set_param_value_per_environment(group, param, param_per_environment)
+  def set_param_value_per_environment(group, param, throw = false)
     @prioritized_environments.each do |env|
       if override?(group, param, env)
-        @config[group][param] = param_per_environment[group][param][env]
+        @config[group][param] = @param_per_environment[group][param][env]
+        throw ? throw(:stop) : break
       end
     end
   end
 
   def override_values
-    @prioritized_environments.each do |env|
+    catch(:stop) do
       @config.each do |group, param_values|
-        param_values.to_h.each do |param, _|
-          if override?(group, param, env)
-            @config[group][param] = @param_per_environment[group][param][env]
-          end
+        param_values.to_h.keys.each do |param|
+          set_param_value_per_environment(group, param, throw=true)
         end
       end
     end
@@ -154,5 +146,9 @@ class ConfigParser
       return if respond_to?(group.to_sym)
       define_singleton_method(group) { @config[group] }
     end
+  end
+
+  def method_missing(*args)
+    nil
   end
 end
