@@ -12,6 +12,8 @@ enabled = no
 
 crashlytics = Crashlytics.new
 config = crashlytics.load_config('/settings.conf', :ubuntu)
-config.ftp
+config.ftp.to_h
 => {:name=>"hello there, ftp uploading", :path=>"/etc/var/uploads", :enabled=>false}
+ftp.name
+=> "hello there, ftp uploading"
 ```
