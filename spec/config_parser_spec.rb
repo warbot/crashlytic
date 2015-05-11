@@ -28,7 +28,7 @@ describe ConfigParser do
 
     config = parser.parse(config_file, ['production'])
 
-    # expect(config.environments).not_to include 'ubuntu'
+    expect(parser.environments).not_to include 'ubuntu'
     expect(config.ftp[:path]).to eq '/srv/var/tmp/'
   end
 
