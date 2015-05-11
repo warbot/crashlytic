@@ -1,3 +1,4 @@
+require 'ostruct'
 require File.join(File.expand_path(__dir__), 'config_parser.rb')
 
 class Crashlytics
@@ -6,8 +7,8 @@ class Crashlytics
   def initialize
     @file = nil
     @new_file = true
-    @config_parser = ConfigParser
-    @config = @config_parser.new
+    @config_parser = ConfigParser.new
+    @config = OpenStruct.new
   end
 
   def path_to_file
@@ -30,9 +31,9 @@ class Crashlytics
 
   def parse_config_or_change_config_environments(overrides)
     if new_file
-      @config = @config_parser.new.parse(file, overrides)
+      @config = config_parser.parse(file, overrides)
     else
-      @config.environments = overrides
+      @config
     end
   end
 

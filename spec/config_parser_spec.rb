@@ -1,4 +1,3 @@
-require 'ostruct'
 require 'benchmark'
 require File.join(File.expand_path(__dir__), '../app/config_parser')
 

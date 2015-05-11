@@ -40,28 +40,26 @@ describe Crashlytics do
 
     it 'returns same config unless file changed' do
       crashlytics = Crashlytics.new
-      config_parser = crashlytics.config_parser
-      parser = double('parser', parse: crashlytics.config)
-      allow(config_parser).to receive(:new).and_return parser
+      parser = double('parser', parse: 'config')
+      allow(crashlytics).to receive(:config_parser).and_return parser
       allow(crashlytics).to receive(:file_changed?).and_return false
 
       crashlytics.load_config(crashlytics.path_to_file)
       crashlytics.load_config(crashlytics.path_to_file)
 
-      expect(config_parser).to have_received(:new).once
+      expect(parser).to have_received(:parse).once
     end
 
     it 'returns new config each time file changes' do
       crashlytics = Crashlytics.new
-      config_parser = crashlytics.config_parser
-      parser = double('parser', parse: crashlytics.config)
-      allow(config_parser).to receive(:new).and_return parser
+      parser = double('parser', parse: 'config')
+      allow(crashlytics).to receive(:config_parser).and_return parser
       allow(crashlytics).to receive(:file_changed?).and_return true
 
       crashlytics.load_config(crashlytics.path_to_file)
       crashlytics.load_config(crashlytics.path_to_file)
 
-      expect(config_parser).to have_received(:new).twice
+      expect(parser).to have_received(:parse).twice
     end
   end
 
