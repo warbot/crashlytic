@@ -14,9 +14,11 @@ enabled = no
 You can parse it like:
 ```
 crashlytics = Crashlytics.new
-parser = crashlytics.load_config('settings.conf', :ubuntu)
-config = parser.ftp.to_h
+config = crashlytics.load_config('settings.conf', :ubuntu)
+config.ftp.to_h
 => {name: "hello there, ftp uploading", path: "/etc/var/uploads", enabled: false}
 config.name
 => "hello there, ftp uploading"
+config.path
+=> "/etc/var/uploads"
 ```
